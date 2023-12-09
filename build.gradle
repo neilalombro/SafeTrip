@@ -1,0 +1,197 @@
+plugins {
+    id 'application'
+    id 'java'
+    id "org.openjfx.javafxplugin" version "0.0.14"
+    id 'jacoco'
+    id 'checkstyle'
+}
+
+archivesBaseName = 'safetrip'
+group = 'safetrip'
+version = '2.0'
+mainClassName = 'seng202.team10.App'
+
+def javaVersion = '17'
+def javafxVersion = '21-ea+17'
+
+sourceCompatibility = "${javaVersion}"
+targetCompatibility = "${javaVersion}"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/org.openjfx/javafx-controls
+    implementation "org.openjfx:javafx-controls:${javafxVersion}"
+
+    //for tuples
+    implementation "org.javatuples:javatuples:1.2"
+
+    // https://mvnrepository.com/artifact/org.openjfx/javafx-fxml
+    implementation "org.openjfx:javafx-fxml:${javafxVersion}"
+
+    // https://mvnrepository.com/artifact/org.openjfx/javafx-web
+    implementation "org.openjfx:javafx-web:${javafxVersion}"
+
+    // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
+    implementation 'org.xerial:sqlite-jdbc:3.40.1.0'
+
+    // https://mvnrepository.com/artifact/com.opencsv/opencsv
+    implementation 'com.opencsv:opencsv:5.7.1'
+
+    // https://mvnrepository.com/artifact/org.controlsfx/controlsfx
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '8.0.5'
+
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
+    implementation 'org.apache.logging.log4j:log4j-api:2.20.0'
+
+
+    //https://mvnrepository.com/artifact/org.controlsfx/controlsfx
+    implementation 'org.controlsfx:controlsfx:11.1.0'
+
+
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
+    implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+
+    // https://mvnrepository.com/artifact/io.github.cdimascio/java-dotenv
+    implementation 'io.github.cdimascio:java-dotenv:5.2.2'
+
+    // https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
+    // https://mvnrepository.com/artifact/io.cucumber/cucumber-junit-platform-engine
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.11.1'
+
+
+    // https://mvnrepository.com/artifact/org.controlsfx/controlsfx
+    implementation 'org.controlsfx:controlsfx:11.1.0'
+
+
+    // https://mvnrepository.com/artifact/io.cucumber/cucumber-java
+    testImplementation 'io.cucumber:cucumber-java:7.11.1'
+
+    // https://mvnrepository.com/artifact/io.cucumber/cucumber-junit
+    testImplementation 'io.cucumber:cucumber-junit:7.11.1'
+
+
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    testImplementation 'com.google.code.gson:gson:2.10.1'
+
+
+    // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-suite
+    testImplementation 'org.junit.platform:junit-platform-suite:1.9.2'
+
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    testImplementation 'com.google.code.gson:gson:2.10.1'
+
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+
+    // https://mvnrepository.com/artifact/org.assertj/assertj-core
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+
+    // https://mvnrepository.com/artifact/org.junit.vintage/junit-vintage-engine
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.9.2'
+
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation 'org.mockito:mockito-core:5.4.0'
+}
+
+application {
+    // Define the main class for the application.
+    mainClass = "${mainClassName}"
+}
+
+checkstyle {
+    toolVersion '10.12.4'
+    configFile file("config/checkstyle/google_checks.xml")
+    ignoreFailures = false
+}
+
+checkstyleMain {
+    source = 'src/main/java'
+}
+
+checkstyleTest {
+    source = 'src/test/java'
+}
+
+javafx {
+    version = "${javafxVersion}"
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.web' ]
+}
+
+test {
+    useJUnitPlatform()
+
+    filter {
+        includeTestsMatching "seng202.team10.unittests.*"
+    }
+
+    finalizedBy jacocoTestReport
+}
+
+
+tasks.register("cucumber", Test)  {
+    group = "verification"
+
+    useJUnitPlatform()
+
+    filter {
+        includeTestsMatching "seng202.team10.cucumber.*"
+    }
+
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+    }
+
+    finalizedBy jacocoTestReport
+}
+
+tasks.named("check") {
+    dependsOn test, cucumber
+
+    finalizedBy jacocoTestReport
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        html.required = true
+        xml.required = false
+        html.stylesheet resources.text.fromFile('config/checkstyle/checkstyle-noframes-severity-sorted.xsl')
+    }
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+    from {
+        configurations.runtimeClasspath.collect {it.isDirectory()?it:zipTree(it)}
+    }
+}
+
+// Jacoco test coverage config
+jacoco {
+    toolVersion = "0.8.9"
+}
+
+jacocoTestReport {
+    executionData fileTree(project.rootDir) {
+        include '**/*.exec'
+    }
+    reports {
+        html.destination file("${buildDir}/reports/tests/coverage/")
+    }
+}
