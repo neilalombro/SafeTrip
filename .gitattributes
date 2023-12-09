@@ -1,1 +1,2 @@
 crash_data.csv filter=lfs diff=lfs merge=lfs -text
+safetrip-2.0.jar filter=lfs diff=lfs merge=lfs -text
